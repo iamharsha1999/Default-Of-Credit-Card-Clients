@@ -11,9 +11,9 @@ import numpy as np
 data = pd.read_csv('/home/harsha/Machine_Learning_Project/Dataset/default of credit card clients.csv')
 
 # data.drop(data.columns[0],axis= 1,inplace=True)
-data_0 = data.where(data['Y'] == '0')
+# data_0 = data.where(data['Y'] == '0')
 # data_1 = data.where(data['Y'] == '1')
-data_0.dropna(inplace=True)
+# data_0.dropna(inplace=True)
 data.dropna(inplace=True)
 
 data_0 = data_0.iloc[1:, :]
@@ -22,7 +22,7 @@ data = data.iloc[1:, :]
 convert_dict = {'X1':float, 'X2':float, 'X3':float, 'X4':float,  'X5':float, 'X6':float, 'X7':float, 'X8':float, 'X9':float, 'X10':float,
                 'X11':float, 'X12':float, 'X13':float, 'X14':float, 'X15':float, 'X16':float, 'X17':float, 'X18':float, 'X19':float, 'X20':float, 'X21':float, 'X22':float, 'X23':float, 'Y':float
                 }
-data_0 = data_0.astype(convert_dict)
+# data_0 = data_0.astype(convert_dict)
 data = data.astype(convert_dict)
 
 
