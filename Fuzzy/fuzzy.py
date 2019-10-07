@@ -42,7 +42,7 @@ class MinMaxFuzzy:
 		return cmps
 
 
-	def feedforward(self, activation):
+	def feedforward(self, activation="OR"):
 
 		if activation == "OR":
 
@@ -78,9 +78,9 @@ class MinMaxFuzzy:
 		E_t_1 = np.multiply(-(self.y - self.output) * (self.output), self.input)  ##For Weights 1
 
 		##Compute d_weights(t)
-		d_weights_t_3 = np.add((-eta * E_t_3), d_weights_prev_t_3)
-		d_weights_t_2 =	np.add((-eta * E_t_2), d_weights_prev_t_2)
-		d_weights_t_1 = np.add((-eta * E_t_1), d_weights_prev_t_1)
+		d_weights_t_3 = np.add((-eta * E_t_3), np.multiply(alpha,d_weights_prev_t_3))
+		d_weights_t_2 =	np.add((-eta * E_t_2), np.multiply(alpha,d_weights_prev_t_2))
+		d_weights_t_1 = np.add((-eta * E_t_1), np.multiply(alpha,d_weights_prev_t_1))
 
 		##Update the Weights using the derived formula
 		self.weights3 = np.add(self.weights3, d_weights_t_3)
@@ -92,7 +92,16 @@ class MinMaxFuzzy:
 		d_weights_prev_t_2 = d_weights_t_2
 		d_weights_prev_t_1 = d_weights_t_1
 
-		
+		return d_weights_t_3,d_weights_t_2,d_weights_t_1
+
+	def optimize(self,activation):
+
+		for i in range():
+
+			MinMaxFuzzy.feedforward(activation=activation)
+			MinMaxFuzzy.backward_propagation()
+
+
 class Loss:
 
 	@staticmethod
