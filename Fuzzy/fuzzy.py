@@ -2,17 +2,19 @@ import numpy as np
 
 class MinMaxFuzzy:
 
-	flag = True
-	
 	
 	def __init__(self, x, y):
 
 		self.input = x
-		self.weights1 = np.random.randn(self.input.shape[1], 32) ##Weights for connections from Input to 1st hidden layer
-		self.weights2 = np.random.randn(32, 12)  ##Weights for connections from 1st Hidden Layer to 2nd Hidden Layer
-		self.weights3 = np.random.randn(12, 1)  ##Weights for connections from 2nd Hidden Layer to 3rd Hidden Layer
+		self.weights1 = np.random.random((32,self.input.shape[1])) ##Weights for connections from Input to 1st hidden layer
+		self.weights2 = np.random.random((12,32))  ##Weights for connections from 1st Hidden Layer to 2nd Hidden Layer
+		self.weights3 = np.random.random((1, 12))  ##Weights for connections from 2nd Hidden Layer to 3rd Hidden Layer
 		self.y = y
 		self.output = np.zeros(self.y.shape)
+
+		self.d_weights_prev_t_3 = np.zeros((self.weights3.shape[0], self.weights3.shape[1]))  ##2nd Hidden --> Output
+		self.d_weights_prev_t_2 = np.zeros((self.weights2.shape[0], self.weights2.shape[1]))  ##1st Hidden --> 2nd Hidden
+		self.d_weights_prev_t_1 = np.zeros((self.weights1.shape[0], self.weights1.shape[1]))  ##Input -->1st Hidden
 
 	@staticmethod
 	def cpneuron(output_previous, b, neuronfunction):
@@ -21,26 +23,29 @@ class MinMaxFuzzy:
 		
 		if neuronfunction == 'OR':
 
-			for j in range(b.shape[1]):
+			for j in range(b.shape[0]):
 				ncmps = 0
 				for i in range(output_previous.shape[1]):
-					ncmps = max(ncmps, min(b[j][i], output_previous[i]))
-				cmps.append(max(ncmps))
+					ncmps = max(ncmps, min(b[j][i], output_previous[0][i]))
+				cmps.append(ncmps)
 		
 		elif neuronfunction == 'AND':
 
-			for j in range(b.shape[1]):
+			for j in range(b.shape[0]):
 				ncmps = 1
 				for i in range(output_previous.shape[1]):
 					ncmps = min(ncmps, max(b[j], output_previous[i]))
-				cmps.append(min(ncmps))
+				cmps.append(ncmps)
 
 		cmps = np.array(cmps)
+		cmps = np.reshape(cmps,(1,cmps.shape[0]))
+
 
 	
 
 		return cmps
-
+	# def input_processor(self):
+	# 	x = self.input
 
 	def feedforward(self, activation="OR"):
 
@@ -59,6 +64,8 @@ class MinMaxFuzzy:
 
 	def backward_propagation(self, alpha = 0.1, eta = 0.9):
 
+
+
 		"""We apply Backpropagation to update out weights of all layers
 			To do this we use the chain rule
 
@@ -66,11 +73,7 @@ class MinMaxFuzzy:
 
 			Note: Initial values of d_weights(t-1) = 0
 		"""
-		if(MinMaxFuzzy.flag):
-			d_weights_prev_t_3= np.zeros(self.weights3.shape[0], self.weights3.shape[1]) ##2nd Hidden --> Output
-			d_weights_prev_t_2= np.zeros(self.weights2.shape[0], self.weights2.shape[1]) ##1st Hidden --> 2nd Hidden
-			d_weights_prev_t_1= np.zeros(self.weights1.shape[0], self.weights1.shape[1]) ##Input -->1st Hidden
-			MinMaxFuzzy.flag = False
+
 
 		## Calculating E(t)
 		E_t_3 = np.multiply(-(self.y - self.output) * (self.output), self.layer2) ##For Weights 3
@@ -78,14 +81,15 @@ class MinMaxFuzzy:
 		E_t_1 = np.multiply(-(self.y - self.output) * (self.output), self.input)  ##For Weights 1
 
 		##Compute d_weights(t)
-		d_weights_t_3 = np.add((-eta * E_t_3), np.multiply(alpha,d_weights_prev_t_3))
-		d_weights_t_2 =	np.add((-eta * E_t_2), np.multiply(alpha,d_weights_prev_t_2))
-		d_weights_t_1 = np.add((-eta * E_t_1), np.multiply(alpha,d_weights_prev_t_1))
+		d_weights_t_3 = np.add((-eta * E_t_3), np.multiply(alpha,self.d_weights_prev_t_3))
+		d_weights_t_2 =	np.add((-eta * E_t_2), np.multiply(alpha,self.d_weights_prev_t_2))
+		d_weights_t_1 = np.add((-eta * E_t_1), np.multiply(alpha,self.d_weights_prev_t_1))
 
 		##Update the Weights using the derived formula
 		self.weights3 = np.add(self.weights3, d_weights_t_3)
 		self.weights2 = np.add(self.weights2, d_weights_t_2)
 		self.weights1 = np.add(self.weights1, d_weights_t_1)
+
 
 		## Change the Values of d_weight(t-1)
 		d_weights_prev_t_3 = d_weights_t_3
@@ -94,12 +98,16 @@ class MinMaxFuzzy:
 
 		return d_weights_t_3,d_weights_t_2,d_weights_t_1
 
-	def optimize(self,activation):
+	def optimize(self,activation, epochs):
 
-		for i in range():
+		for i in range(epochs):
 
-			MinMaxFuzzy.feedforward(activation=activation)
-			MinMaxFuzzy.backward_propagation()
+			self.feedforward(activation=activation)
+			self.backward_propagation()
+
+	def fit(self, activation, epochs):
+
+		self.optimize(activation=activation, epochs=epochs)
 
 
 class Loss:
