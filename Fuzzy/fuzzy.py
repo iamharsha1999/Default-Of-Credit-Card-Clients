@@ -11,16 +11,25 @@ class MinMaxFuzzy:
 
 	def __init__(self, x, y):
 
-		self.input = x
+		y = np.array(y)
+		x = np.array(x)
+		x_d = np.reshape(x[0], (1, x.shape[1]))
+		y_d = np.reshape(y[0], (1, 1))
+		self.input = x_d
+
+		print("Initialising the model with Input shape.{}".format(x_d.shape))
+		print("Layer 1: {}".format(32))
+		print("Layer 2: {}".format(12))
+		print("Output Layer: {}".format(1))
 		self.weights1 = np.random.random((32,self.input.shape[1])) ##Weights for connections from Input to 1st hidden layer
 		self.weights1 = MinMaxFuzzy.normalise(self.weights1)
 		self.weights2 = np.random.random((12,32))  ##Weights for connections from 1st Hidden Layer to 2nd Hidden Layer
 		self.weights2 = MinMaxFuzzy.normalise(self.weights2)
 		self.weights3 = np.random.random((1, 12))  ##Weights for connections from 2nd Hidden Layer to 3rd Hidden Layer
 		self.weights3 = MinMaxFuzzy.normalise(self.weights3)
-		self.y = y
-		self.output = np.zeros(self.y.shape)
+		self.y = y_d
 
+		self.output = np.zeros(self.y.shape)
 		self.d_weights_prev_t_3 = np.zeros((self.weights3.shape[0], self.weights3.shape[1]))  ##2nd Hidden --> Output
 		self.d_weights_prev_t_2 = np.zeros((self.weights2.shape[0], self.weights2.shape[1]))  ##1st Hidden --> 2nd Hidden
 		self.d_weights_prev_t_1 = np.zeros((self.weights1.shape[0], self.weights1.shape[1]))  ##Input -->1st Hidden
@@ -112,14 +121,25 @@ class MinMaxFuzzy:
 
 	def optimize(self,activation, epochs):
 
-		for i in range(epochs):
-
 			self.feedforward(activation=activation)
 			self.backward_propagation()
 
-	def fit(self, activation, epochs):
+	def fit(self, x, y, activation, epochs):
+		y = np.array(y)
+		x = np.array(x)
 
-		self.optimize(activation=activation, epochs=epochs)
+		print("Number of Epochs: {}".format(epochs))
+		print("Activation : {}".format(activation))
+
+		for j in range(epochs):
+			print("Epoch {}".format(j))
+			for i in range(len(x)):
+				x_d = np.reshape(x[i], (1, x.shape[1]))
+				y_d = np.reshape(y[i], (1, 1))
+				self.input = x_d
+				self.output = y_d
+				self.optimize(activation, epochs)
+
 
 
 class Loss:
