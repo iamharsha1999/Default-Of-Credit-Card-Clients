@@ -2,13 +2,22 @@ import numpy as np
 
 class MinMaxFuzzy:
 
-	
+	@staticmethod
+	def normalise(x):
+		maxi = np.max(x)
+		mini = np.min(x)
+		x = (x - mini)/(maxi-mini)
+		return x
+
 	def __init__(self, x, y):
 
 		self.input = x
 		self.weights1 = np.random.random((32,self.input.shape[1])) ##Weights for connections from Input to 1st hidden layer
+		self.weights1 = MinMaxFuzzy.normalise(self.weights1)
 		self.weights2 = np.random.random((12,32))  ##Weights for connections from 1st Hidden Layer to 2nd Hidden Layer
+		self.weights2 = MinMaxFuzzy.normalise(self.weights2)
 		self.weights3 = np.random.random((1, 12))  ##Weights for connections from 2nd Hidden Layer to 3rd Hidden Layer
+		self.weights3 = MinMaxFuzzy.normalise(self.weights3)
 		self.y = y
 		self.output = np.zeros(self.y.shape)
 
@@ -90,6 +99,9 @@ class MinMaxFuzzy:
 		self.weights2 = np.add(self.weights2, d_weights_t_2)
 		self.weights1 = np.add(self.weights1, d_weights_t_1)
 
+		self.weights1 = MinMaxFuzzy.normalise(self.weights1)
+		self.weights2 = MinMaxFuzzy.normalise(self.weights2)
+		self.weights3 = MinMaxFuzzy.normalise(self.weights3)
 
 		## Change the Values of d_weight(t-1)
 		d_weights_prev_t_3 = d_weights_t_3
