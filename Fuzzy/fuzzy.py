@@ -1,7 +1,6 @@
 import numpy as np
-from numba import jit,cuda
 import sys
-import time
+
 
 class MinMaxFuzzy:
 
@@ -38,11 +37,10 @@ class MinMaxFuzzy:
 		self.d_weights_prev_t_1 = np.zeros((self.weights1.shape[0], self.weights1.shape[1]))  ##Input -->1st Hidden
 
 	@staticmethod
-
 	def cpneuron(output_previous, b, neuronfunction):
 
 		cmps = []
-		
+
 		if neuronfunction == 'OR':
 
 			for j in range(b.shape[0]):
@@ -50,7 +48,7 @@ class MinMaxFuzzy:
 				for i in range(output_previous.shape[1]):
 					ncmps = max(ncmps, min(b[j][i], output_previous[0][i]))
 				cmps.append(ncmps)
-		
+
 		elif neuronfunction == 'AND':
 
 			for j in range(b.shape[0]):
@@ -63,11 +61,10 @@ class MinMaxFuzzy:
 		cmps = np.reshape(cmps,(1,cmps.shape[0]))
 
 
-	
+
 
 		return cmps
-	# def input_processor(self):
-	# 	x = self.input
+
 
 	def feedforward(self, activation="OR"):
 
@@ -78,7 +75,7 @@ class MinMaxFuzzy:
 			self.output = MinMaxFuzzy.cpneuron(self.layer2, self.weights3, 'OR')
 
 		elif activation == "AND":
-			
+
 			self.layer1 = MinMaxFuzzy.cpneuron(self.input, self.weights1, 'AND')
 			self.layer2 = MinMaxFuzzy.cpneuron(self.layer1, self.weights2, 'AND')
 			self.output = MinMaxFuzzy.cpneuron(self.weights2, self.weights3, 'AND')
@@ -112,9 +109,9 @@ class MinMaxFuzzy:
 		self.weights2 = np.add(self.weights2, d_weights_t_2)
 		self.weights1 = np.add(self.weights1, d_weights_t_1)
 
-		self.weights1 = MinMaxFuzzy.normalise(self.weights1)
-		self.weights2 = MinMaxFuzzy.normalise(self.weights2)
-		self.weights3 = MinMaxFuzzy.normalise(self.weights3)
+		# self.weights1 = MinMaxFuzzy.normalise(self.weights1)
+		# self.weights2 = MinMaxFuzzy.normalise(self.weights2)
+		# self.weights3 = MinMaxFuzzy.normalise(self.weights3)
 
 		## Change the Values of d_weight(t-1)
 		d_weights_prev_t_3 = d_weights_t_3
@@ -128,11 +125,28 @@ class MinMaxFuzzy:
 			self.feedforward(activation=activation)
 			self.backward_propagation()
 
-	def fit(self, x, y, activation, epochs):
+	@staticmethod
+	def cal_acc(y,x):
+		"""
+		y being the output of the neural
+		x being the ground truth
+		"""
+		correct = 0
+		for i in range(len(y)):
+			if y[i] == x[i]:
+				correct+=1
+			else:
+				pass
+		accuracy = (correct/len(y)) * 100
+
+		return accuracy
+
+
+	def fit(self, x, y, activation, epochs, verbose = 1000):
 		y = np.array(y)
 		x = np.array(x)
 
-		toolbar_width = int(len(x)/1000)
+		toolbar_width = int(len(x)/verbose)
 
 		print("Number of Epochs: {}".format(epochs))
 		print("Activation : {}".format(activation))
@@ -143,18 +157,43 @@ class MinMaxFuzzy:
 			sys.stdout.write("[%s]" % (" " * toolbar_width))
 			sys.stdout.flush()
 			sys.stdout.write("\b" * (toolbar_width + 1))  # return to start of line, after '['
+
+			##Initializing the Loss to Zero
+			loss = 0
+
+			##Initializing the variables for accuracy
+			cal_y = []
+			cal_x = []
+
 			for i in range(len(x)):
 				x_d = np.reshape(x[i], (1, x.shape[1]))
 				y_d = np.reshape(y[i], (1, 1))
 				self.input = x_d
-				self.output = y_d
+				self.y = y_d
 				self.optimize(activation, epochs)
+				if self.output > 0.5:
+					cal_y.append(1)
+				else:
+					cal_y.append(0)
+
+				cal_x.append(self.y)
 
 				# update the bar
-				if i%1000 ==0:
+				if i%verbose ==0:
 					sys.stdout.write("=")
 					sys.stdout.flush()
-			sys.stdout.write("]\n")
+
+				# Updating the Loss
+				loss += Loss.mse(self.output, self.y)
+			##Calculate the loss
+			loss = loss/len(x)
+
+			##Calculate the accuracy
+			accuracy = round(MinMaxFuzzy.cal_acc(cal_y, cal_x),2)
+
+			sys.stdout.write("]\t")
+			sys.stdout.write("Accuracy:" + str(accuracy)+ " ")
+			print("Loss :{}".format(loss))
 
 
 
@@ -170,23 +209,25 @@ class Loss:
 	    """
 	    X is the output from fully connected layer (num_examples x num_classes)
 	    y is labels (num_examples x 1)
-	    	Note that y is not one-hot encoded vector. 
+	    	Note that y is not one-hot encoded vector.
 	    	It can be computed as y.argmax(axis=1) from one-hot encoded vectors of labels if required.
 	    """
-	    m = y.shape[0]
+	    m = y
 	    p = Loss.softmax(x)
-	    # We use multidimensional array indexing to extract 
+	    # We use multidimensional array indexing to extract
 	    # softmax probability of the correct label for each sample
 	    log_likelihood = -np.log(p[range(m),y])
 	    loss = np.sum(log_likelihood) / m
 	    return loss
+
 	@staticmethod
-	def mse(self, x, y):
+	def mse(x, y):
 
 		"""
 		x being the output of the neural network
 		y being the actual output for the corresponding input or the label in case of classification
 		"""
+
 		se = 0
 		for i in range(len(y)):
 			error = (y[i] - x[i])**2
@@ -197,7 +238,7 @@ class Loss:
 		return mse
 	@staticmethod
 	def absolute_error(self, x, y):
-		
+
 		"""
 		x being the output of the neural network
 		y being the actual output for the corresponding input or the label in case of classification

@@ -1,1 +1,1 @@
-from Fuzzy import *
+from .fuzzy import *
