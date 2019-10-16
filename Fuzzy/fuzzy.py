@@ -1,4 +1,7 @@
-import numpy as np 
+import numpy as np
+from numba import jit,cuda
+import sys
+import time
 
 class MinMaxFuzzy:
 
@@ -35,6 +38,7 @@ class MinMaxFuzzy:
 		self.d_weights_prev_t_1 = np.zeros((self.weights1.shape[0], self.weights1.shape[1]))  ##Input -->1st Hidden
 
 	@staticmethod
+
 	def cpneuron(output_previous, b, neuronfunction):
 
 		cmps = []
@@ -128,17 +132,29 @@ class MinMaxFuzzy:
 		y = np.array(y)
 		x = np.array(x)
 
+		toolbar_width = int(len(x)/1000)
+
 		print("Number of Epochs: {}".format(epochs))
 		print("Activation : {}".format(activation))
+		print("Number of Training Examples: {}".format(len(x)))
 
 		for j in range(epochs):
 			print("Epoch {}".format(j))
+			sys.stdout.write("[%s]" % (" " * toolbar_width))
+			sys.stdout.flush()
+			sys.stdout.write("\b" * (toolbar_width + 1))  # return to start of line, after '['
 			for i in range(len(x)):
 				x_d = np.reshape(x[i], (1, x.shape[1]))
 				y_d = np.reshape(y[i], (1, 1))
 				self.input = x_d
 				self.output = y_d
 				self.optimize(activation, epochs)
+
+				# update the bar
+				if i%1000 ==0:
+					sys.stdout.write("=")
+					sys.stdout.flush()
+			sys.stdout.write("]\n")
 
 
 
