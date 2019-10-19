@@ -24,4 +24,4 @@ x = fuzzfy(x)
 fuzzy_model = MinMaxFuzzy(x,y)
 
 #Fitting the Data to train the model
-fuzzy_model.fit(x, y, 'OR',100)
+fuzzy_model.fit(x, y, 'AND',100, loss = 'mse')
