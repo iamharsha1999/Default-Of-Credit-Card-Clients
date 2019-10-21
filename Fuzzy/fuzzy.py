@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 from sklearn.utils import shuffle
+import math
 
 
 class MinMaxFuzzy:
@@ -21,18 +22,18 @@ class MinMaxFuzzy:
 		self.input = x_d
 
 		print("Initialising the model with Input shape.{}".format(x_d.shape))
-		print("Layer 1: {}".format(32))
-		print("Layer 2: {}".format(24))
-		print("Layer 3: {}".format(16))
+		print("Layer 1: {}".format(16))
+		print("Layer 2: {}".format(8))
+		# print("Layer 3: {}".format(8))
 		print("Output Layer: {}".format(1))
-		self.weights1 = np.random.random((32,self.input.shape[1])) ##Weights for connections from Input to 1st hidden layer
-		# self.weights1 = MinMaxFuzzy.normalise(self.weights1)
-		self.weights2 = np.random.random((24,32))  ##Weights for connections from 1st Hidden Layer to 2nd Hidden Layer
-		# self.weights2 = MinMaxFuzzy.normalise(self.weights2)
-		self.weights3 = np.random.random((16, 24))
-		# self.weights3 = MinMaxFuzzy.normalise(self.weights3)
-		self.weights4 = np.random.random((1, 16))  ##Weights for connections from 2nd Hidden Layer to 3rd Hidden Layer
-		# self.weights4 = MinMaxFuzzy.normalise(self.weights4)
+		self.weights1 = np.random.randint(0, 10 , size = (16,self.input.shape[1])) ##Weights for connections from Input to 1st hidden layer
+		self.weights1 = np.around(MinMaxFuzzy.normalise(self.weights1), decimals = 2)
+		# self.weights2 = np.random.randint(0, 10 , size = (8,16))  ##Weights for connections from 1st Hidden Layer to 2nd Hidden Layer
+		# self.weights2 = np.around(MinMaxFuzzy.normalise(self.weights2), decimals = 2)
+		self.weights2 = np.random.randint(0 , 10, size = (8, 16))
+		self.weights2 = np.around(MinMaxFuzzy.normalise(self.weights2), decimals  = 2)
+		self.weights3 = np.random.randint(0 , 10, size = (1, 8))  ##Weights for connections from 2nd Hidden Layer to 3rd Hidden Layer
+		self.weights3 = np.around(MinMaxFuzzy.normalise(self.weights3), decimals = 2)
 		self.y = y_d
 
 		self.output = np.zeros(self.y.shape)
@@ -42,7 +43,7 @@ class MinMaxFuzzy:
 	def declare_prev_weights(self):
 
 		##Declare the weights
-		self.d_weights_prev_t_4 = np.zeros((self.weights4.shape[0], self.weights4.shape[1]))
+		# self.d_weights_prev_t_4 = np.zeros((self.weights4.shape[0], self.weights4.shape[1]))
 		self.d_weights_prev_t_3 = np.zeros((self.weights3.shape[0], self.weights3.shape[1]))  ##2nd Hidden --> Output
 		self.d_weights_prev_t_2 = np.zeros((self.weights2.shape[0], self.weights2.shape[1]))  ##1st Hidden --> 2nd Hidden
 		self.d_weights_prev_t_1 = np.zeros((self.weights1.shape[0], self.weights1.shape[1]))  ##Input -->1st Hidden
@@ -83,18 +84,18 @@ class MinMaxFuzzy:
 
 			self.layer1 = MinMaxFuzzy.cpneuron(self.input, self.weights1, 'OR')
 			self.layer2 = MinMaxFuzzy.cpneuron(self.layer1, self.weights2, 'OR')
-			self.layer3 = MinMaxFuzzy.cpneuron(self.layer2, self.weights3, 'OR')
-			self.output = MinMaxFuzzy.cpneuron(self.layer3, self.weights4, 'OR')
+			# self.layer3 = MinMaxFuzzy.cpneuron(self.layer2, self.weights3, 'OR')
+			self.output = MinMaxFuzzy.cpneuron(self.layer2, self.weights3, 'OR')
 
 		elif activation == "AND":
 
 			self.layer1 = MinMaxFuzzy.cpneuron(self.input, self.weights1, 'AND')
 			self.layer2 = MinMaxFuzzy.cpneuron(self.layer1, self.weights2, 'AND')
-			self.layer3 = MinMaxFuzzy.cpneuron(self.layer2, self.weights3, 'AND')
-			self.output = MinMaxFuzzy.cpneuron(self.layer3, self.weights4, 'AND')
+			# self.layer3 = MinMaxFuzzy.cpneuron(self.layer2, self.weights3, 'AND')
+			self.output = MinMaxFuzzy.cpneuron(self.layer2, self.weights3, 'AND')
 
 
-	def backward_propagation(self, alpha = 0.1, eta = 0.4):
+	def backward_propagation(self, batch_loss, alpha = 0.1, eta = 0.4):
 
 
 
@@ -105,48 +106,47 @@ class MinMaxFuzzy:
 
 			Note: Initial values of d_weights(t-1) = 0
 		"""
-		if self.loss == 'normal':
+		if self.optimizer == 'normal':
 			## Calculating E(t)
-			E_t_4 = np.multiply(-(self.y - self.output) * (self.output), self.layer3) ##For weights 4
+			# E_t_4 = np.multiply(-(self.y - self.output) * (self.output), self.layer3) ##For weights 4
 			E_t_3 = np.multiply(-(self.y - self.output) * (self.output), self.layer2) ##For Weights 3
 			E_t_2 = np.multiply(-(self.y - self.output) * (self.output), self.layer1) ##For Weights 2
 			E_t_1 = np.multiply(-(self.y - self.output) * (self.output), self.input)  ##For Weights 1
 
 			##Compute d_weights(t)
-			d_weights_t_4 = np.add((-eta * E_t_4), np.multiply(alpha,self.d_weights_prev_t_4))
+			# d_weights_t_4 = np.add((-eta * E_t_4), np.multiply(alpha,self.d_weights_prev_t_4))
 			d_weights_t_3 = np.add((-eta * E_t_3), np.multiply(alpha,self.d_weights_prev_t_3))
 			d_weights_t_2 =	np.add((-eta * E_t_2), np.multiply(alpha,self.d_weights_prev_t_2))
 			d_weights_t_1 = np.add((-eta * E_t_1), np.multiply(alpha,self.d_weights_prev_t_1))
 
 			##Update the Weights using the derived formula
-			self.weights  = np.add(self.weights4, d_weights_t_4)
-			self.weights3 = np.add(self.weights3, d_weights_t_3)
-			self.weights2 = np.add(self.weights2, d_weights_t_2)
-			self.weights1 = np.add(self.weights1, d_weights_t_1)
+			# self.weights4  = np.add(self.weights4, d_weights_t_4)
+			self.weights3 = self.weights3 + d_weights_t_3
+			self.weights2 = self.weights2 + d_weights_t_2
+			self.weights1 = self.weights1 + d_weights_t_1
 
 			# self.weights1 = MinMaxFuzzy.normalise(self.weights1)
 			# self.weights2 = MinMaxFuzzy.normalise(self.weights2)
 			# self.weights3 = MinMaxFuzzy.normalise(self.weights3)
 
 			## Change the Values of d_weight(t-1)
-			d_weights_prev_t_4 = d_weights_t_4
+			# d_weights_prev_t_4 = d_weights_t_4
 			d_weights_prev_t_3 = d_weights_t_3
 			d_weights_prev_t_2 = d_weights_t_2
 			d_weights_prev_t_1 = d_weights_t_1
 
-		elif self.loss == 'mse':
+		elif self.optimizer == 'sgd':
 
-			d_weights_t_4 = 2 * (self.output - self.y) * self.layer3
-			d_weights_t_3 = 2 * (self.output - self.y) * np.dot(self.weights4.T,self.layer2)
-			d_weights_t_2 = 2 * (self.output - self.y) * np.dot(np.dot(self.weights4,self.weights3).T,self.layer1)
-			d_weights_t_1 = 2 * (self.output - self.y) * np.dot(np.dot(np.dot(self.weights4,self.weights3),self.weights2).T, self.input)
+			d_weights_t_3 = 2 * (batch_loss) * self.layer2
+			d_weights_t_2 = 2 * (batch_loss) * np.dot(self.weights3.T,self.layer1)
+			d_weights_t_1 = 2 * (batch_loss) * np.dot(np.dot(self.weights3,self.weights2).T,self.input)
+			# d_weights_t_1 = 2 * (batch_loss) * np.dot(np.dot(np.dot(self.weights4,self.weights3),self.weights2).T, self.input)
 
-			##Update th Weights
-			self.weights4  -=  alpha * d_weights_t_4
-			self.weights3 -=  alpha * d_weights_t_3
-			self.weights2 -=  alpha * d_weights_t_2
-			self.weights1 -=  alpha * d_weights_t_1
-
+			## Update the Weights
+			# self.weights4 = self.weights4 - (alpha * d_weights_t_4)
+			self.weights3 = self.weights3 - (alpha * d_weights_t_3)
+			self.weights2 = self.weights2 - (alpha * d_weights_t_2)
+			self.weights1 = self.weights1 - (alpha * d_weights_t_1)
 
 
 
@@ -162,30 +162,30 @@ class MinMaxFuzzy:
 		x being the ground truth
 		"""
 		correct = 0
+
 		for i in range(len(y)):
-			if y[i] == x[i]:
+			if y[i] == x[i][0][0]:
 				correct+=1
-			else:
-				pass
+
 		accuracy = (correct/len(y)) * 100
 
 		return accuracy
 
-	# def cal_val_accuracy(self, val_x, val_y):
-	#
-	# 	x = np.array(val_x)
-	# 	y = np.array(val_y)
-	#
-	# 	for i in range(len(x)):
 
 
 
 
-	def fit(self, x, y, activation, epochs, loss, verbose = 1000):
+
+	def fit(self, x, y, activation, epochs, loss, batch_size = 1024, verbose = 1000):
 		y = np.array(y)
 		x = np.array(x)
 
-		self.loss = loss
+		self.optimzer = loss
+		## Caluculate the No of Batches
+		if len(x)%batch_size != 0 :
+			no_of_batches = int(len(x)/batch_size) + 1
+		else:
+			no_of_batches  = len(x)/batch_size
 
 		toolbar_width = int(len(x)/verbose)
 
@@ -206,26 +206,48 @@ class MinMaxFuzzy:
 			##Initializing the variables for accuracy
 			cal_y = []
 			cal_x = []
+			batch_start = 0
+			batch_end = batch_size
 
-			for i in range(len(x)):
-				x_d = np.reshape(x[i], (1, x.shape[1]))
-				y_d = np.reshape(y[i], (1, 1))
-				self.input = x_d
-				self.y = y_d
-				self.optimize(activation, epochs)
-				if self.output > 0.5:
-					cal_y.append(1)
-				else:
-					cal_y.append(0)
+			for batch in range(no_of_batches):
+
+				batch_loss = 0
+				d_error = 0
+				for i in range(batch_start, batch_end):
+					x_d = np.reshape(x[i], (1, x.shape[1]))
+					y_d = np.reshape(y[i], (1, 1))
+					self.input = x_d
+					self.y = y_d
+					self.feedforward(activation=activation)
+					if self.output > 0.5:
+						cal_y.append(1)
+					else:
+						cal_y.append(0)
 
 					cal_x.append(self.y)
 
-				# update the bar
-				if i%verbose ==0:
-					sys.stdout.write("=")
-					sys.stdout.flush()
-				# Updating the Loss
-				loss += Loss.mse(self.output, self.y)
+					# Updating the Batch_Loss
+					batch_loss += Loss.mse(self.output, self.y)
+					d_error = np.add(d_error, (self.output - self.y), casting = 'unsafe')
+
+				## Calculate the MSE
+				batch_loss = batch_loss/batch_size
+				d_error = (d_error/batch_size)
+
+				## Update the weights
+				self.backward_propagation(d_error)
+				loss += batch_loss/no_of_batches
+
+				## Update the bar
+				sys.stdout.write("=")
+				sys.stdout.flush()
+
+				if batch == no_of_batches-2:
+					batch_start += len(x)%batch_size
+					batch_end += len(x)%batch_size
+				else:
+					batch_start += batch_size
+					batch_end += batch_size
 
 			##Calculate the loss
 			loss = loss/len(x)
@@ -235,8 +257,13 @@ class MinMaxFuzzy:
 
 			sys.stdout.write("]\t")
 			sys.stdout.write("Accuracy:" + str(accuracy)+ " ")
-			print("Loss :{}".format(loss))
+			print("Loss :{}".format(loss[0][0]))
 
+class Activation:
+
+
+	def sigmoid(x):
+		return 1 / (1 + math.exp(-x))
 
 
 class Loss:
@@ -270,14 +297,10 @@ class Loss:
 		y being the actual output for the corresponding input or the label in case of classification
 		"""
 
-		se = 0
-		for i in range(len(y)):
-			error = (y[i] - x[i])**2
-			se += error
+		error = ((y - x)**2)/len(x)
 
-		mse = se/len(se)
+		return error
 
-		return mse
 	@staticmethod
 	def absolute_error(self, x, y):
 

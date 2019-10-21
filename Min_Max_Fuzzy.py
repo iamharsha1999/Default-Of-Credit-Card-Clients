@@ -9,7 +9,7 @@ def fuzzfy(df):
         maximum = df[col].max()
         minimum = df[col].min()
 
-        df[col] = (df[col] - minimum)/(maximum - minimum)
+        df[col] = np.around((df[col] - minimum)/(maximum - minimum) , decimals = 4)
 
     return df
 
@@ -20,8 +20,9 @@ y = df.iloc[:,-1]
 x = df.iloc[:,:-1]
 x = fuzzfy(x)
 
+
 #Initaing the Model
 fuzzy_model = MinMaxFuzzy(x,y)
 
 #Fitting the Data to train the model
-fuzzy_model.fit(x, y, 'AND',100, loss = 'mse')
+fuzzy_model.fit(x, y, 'AND',100, optmizer = 'sgd')
