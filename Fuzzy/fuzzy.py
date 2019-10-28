@@ -1,5 +1,6 @@
 import numpy as np
 import sys
+from Loss import Lossfunction
 from sklearn.utils import shuffle
 import math
 
@@ -19,21 +20,21 @@ class MinMaxFuzzy:
 		x = np.array(x)
 		x_d = np.reshape(x[0], (1, x.shape[1]))
 		y_d = np.reshape(y[0], (1, 1))
-		self.input = x_d
 
+		self.input = x_d
 		print("Initialising the model with Input shape.{}".format(x_d.shape))
 		print("Layer 1: {}".format(16))
 		print("Layer 2: {}".format(8))
 		# print("Layer 3: {}".format(8))
 		print("Output Layer: {}".format(1))
-		self.weights1 = np.random.randint(0, 10 , size = (16,self.input.shape[1])) ##Weights for connections from Input to 1st hidden layer
-		self.weights1 = np.around(MinMaxFuzzy.normalise(self.weights1), decimals = 2)
+		self.weights1 = np.random.randint(0, 50 , size = (16,self.input.shape[1])) ##Weights for connections from Input to 1st hidden layer
+		self.weights1 = np.around(MinMaxFuzzy.normalise(self.weights1), decimals = 1)
 		# self.weights2 = np.random.randint(0, 10 , size = (8,16))  ##Weights for connections from 1st Hidden Layer to 2nd Hidden Layer
 		# self.weights2 = np.around(MinMaxFuzzy.normalise(self.weights2), decimals = 2)
-		self.weights2 = np.random.randint(0 , 10, size = (8, 16))
-		self.weights2 = np.around(MinMaxFuzzy.normalise(self.weights2), decimals  = 2)
-		self.weights3 = np.random.randint(0 , 10, size = (1, 8))  ##Weights for connections from 2nd Hidden Layer to 3rd Hidden Layer
-		self.weights3 = np.around(MinMaxFuzzy.normalise(self.weights3), decimals = 2)
+		self.weights2 = np.random.randint(0 , 50, size = (8, 16))
+		self.weights2 = np.around(MinMaxFuzzy.normalise(self.weights2), decimals  = 1)
+		self.weights3 = np.random.randint(0 , 50, size = (1, 8))  ##Weights for connections from 2nd Hidden Layer to 3rd Hidden Layer
+		self.weights3 = np.around(MinMaxFuzzy.normalise(self.weights3), decimals = 1)
 		self.y = y_d
 
 		self.output = np.zeros(self.y.shape)
@@ -176,11 +177,11 @@ class MinMaxFuzzy:
 
 
 
-	def fit(self, x, y, activation, epochs, loss, batch_size = 1024, verbose = 1000):
+	def fit(self, x, y, activation, epochs, optimizer, batch_size = 1024, verbose = 1000):
 		y = np.array(y)
 		x = np.array(x)
 
-		self.optimzer = loss
+		self.optimizer = optimizer
 		## Caluculate the No of Batches
 		if len(x)%batch_size != 0 :
 			no_of_batches = int(len(x)/batch_size) + 1
@@ -219,6 +220,7 @@ class MinMaxFuzzy:
 					self.input = x_d
 					self.y = y_d
 					self.feedforward(activation=activation)
+
 					if self.output > 0.5:
 						cal_y.append(1)
 					else:
@@ -227,7 +229,7 @@ class MinMaxFuzzy:
 					cal_x.append(self.y)
 
 					# Updating the Batch_Loss
-					batch_loss += Loss.mse(self.output, self.y)
+					batch_loss += Lossfunction.mse(self.output, self.y)
 					d_error = np.add(d_error, (self.output - self.y), casting = 'unsafe')
 
 				## Calculate the MSE
@@ -264,56 +266,3 @@ class Activation:
 
 	def sigmoid(x):
 		return 1 / (1 + math.exp(-x))
-
-
-class Loss:
-
-	@staticmethod
-	def softmax(x):
-		exps = np.exp(x)/np.sum(x)
-		return exps
-
-	@staticmethod
-	def cross_entropy(x, y):
-	    """
-	    X is the output from fully connected layer (num_examples x num_classes)
-	    y is labels (num_examples x 1)
-	    	Note that y is not one-hot encoded vector.
-	    	It can be computed as y.argmax(axis=1) from one-hot encoded vectors of labels if required.
-	    """
-	    m = y
-	    p = Loss.softmax(x)
-	    # We use multidimensional array indexing to extract
-	    # softmax probability of the correct label for each sample
-	    log_likelihood = -np.log(p[range(m),y])
-	    loss = np.sum(log_likelihood) / m
-	    return loss
-
-	@staticmethod
-	def mse(x, y):
-
-		"""
-		x being the output of the neural network
-		y being the actual output for the corresponding input or the label in case of classification
-		"""
-
-		error = ((y - x)**2)/len(x)
-
-		return error
-
-	@staticmethod
-	def absolute_error(self, x, y):
-
-		"""
-		x being the output of the neural network
-		y being the actual output for the corresponding input or the label in case of classification
-		"""
-		error = 0
-
-		for i in range(len(y)):
-
-			error += abs(y[i] - x[i])
-
-		abs_error = error / len(y)
-
-		return abs_error
