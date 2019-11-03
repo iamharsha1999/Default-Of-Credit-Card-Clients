@@ -27,7 +27,7 @@ class MinMaxFuzzy:
 		print("Layer 2: {}".format(8))
 		# print("Layer 3: {}".format(8))
 		print("Output Layer: {}".format(1))
-		self.weights1 = np.random.randint(0, 50 , size = (16,self.input.shape[1])) ##Weights for connections from Input to 1st hidden layer
+		self.weights1 = np.random.randint(0, 50 , size = (16,self.input.shape[1]))  ##Weights for connections from Input to 1st hidden layer
 		self.weights1 = np.around(MinMaxFuzzy.normalise(self.weights1), decimals = 1)
 		# self.weights2 = np.random.randint(0, 10 , size = (8,16))  ##Weights for connections from 1st Hidden Layer to 2nd Hidden Layer
 		# self.weights2 = np.around(MinMaxFuzzy.normalise(self.weights2), decimals = 2)
@@ -44,7 +44,7 @@ class MinMaxFuzzy:
 	def declare_prev_weights(self):
 
 		##Declare the weights
-		# self.d_weights_prev_t_4 = np.zeros((self.weights4.shape[0], self.weights4.shape[1]))
+
 		self.d_weights_prev_t_3 = np.zeros((self.weights3.shape[0], self.weights3.shape[1]))  ##2nd Hidden --> Output
 		self.d_weights_prev_t_2 = np.zeros((self.weights2.shape[0], self.weights2.shape[1]))  ##1st Hidden --> 2nd Hidden
 		self.d_weights_prev_t_1 = np.zeros((self.weights1.shape[0], self.weights1.shape[1]))  ##Input -->1st Hidden
@@ -96,7 +96,7 @@ class MinMaxFuzzy:
 			self.output = MinMaxFuzzy.cpneuron(self.layer2, self.weights3, 'AND')
 
 
-	def backward_propagation(self, batch_loss, alpha = 0.1, eta = 0.4):
+	def backward_propagation(self, batch_loss, alpha = 0.001, eta = 0.4):
 
 
 
@@ -145,9 +145,37 @@ class MinMaxFuzzy:
 
 			## Update the Weights
 			# self.weights4 = self.weights4 - (alpha * d_weights_t_4)
-			self.weights3 = self.weights3 - (alpha * d_weights_t_3)
-			self.weights2 = self.weights2 - (alpha * d_weights_t_2)
-			self.weights1 = self.weights1 - (alpha * d_weights_t_1)
+			self.weights3 = np.subtract(self.weights3,(alpha * d_weights_t_3))
+			self.weights2 = np.subtract(self.weights2,(alpha * d_weights_t_2))
+			self.weights1 = np.subtract(self.weights1,(alpha * d_weights_t_1))
+
+		# elif self.optimizer == 'LM':
+		#
+		# 	"""
+		# 	H being the Hessian Matrix
+		# 	g being the gradient
+		# 	delta_w = (-H) * g
+		#
+		# 	Newtons Update Rule:
+		# 	w_new = w_old - (Inverse(-H)*g)
+		#
+		# 	"""
+		#
+		# 	## Calculate the gradients
+		#
+		# 	#First Order Derivatives
+		# 	d_weights_3 = (batch_loss) * self.layer2
+		# 	d_weights_2 = (batch_loss) * np.dot(self.weights3.T,self.layer1)
+		# 	d_weights_1 = (batch_loss) * np.dot(np.dot(self.weights3,self.weights2).T,self.input)
+		#
+		# 	# Second Order Derivatives
+		# 	d_weights_w_1 = []
+		# 	d_weights_w_2 =
+		# 	d_weights_w_3 = []
+
+
+
+
 
 
 
@@ -169,13 +197,8 @@ class MinMaxFuzzy:
 				correct+=1
 
 		accuracy = (correct/len(y)) * 100
-
-		return accuracy
-
-
-
-
-
+		noic = len(y) - correct
+		return accuracy,correct, noic
 
 	def fit(self, x, y, activation, epochs, optimizer, batch_size = 1024, verbose = 1000):
 		y = np.array(y)
@@ -207,6 +230,7 @@ class MinMaxFuzzy:
 			##Initializing the variables for accuracy
 			cal_y = []
 			cal_x = []
+			correct = 0
 			batch_start = 0
 			batch_end = batch_size
 
@@ -214,6 +238,7 @@ class MinMaxFuzzy:
 
 				batch_loss = 0
 				d_error = 0
+				mse = 0
 				for i in range(batch_start, batch_end):
 					x_d = np.reshape(x[i], (1, x.shape[1]))
 					y_d = np.reshape(y[i], (1, 1))
@@ -223,22 +248,27 @@ class MinMaxFuzzy:
 
 					if self.output > 0.5:
 						cal_y.append(1)
+						self.output = 1
 					else:
 						cal_y.append(0)
+						self.output = 0
 
 					cal_x.append(self.y)
 
+
+
 					# Updating the Batch_Loss
-					batch_loss += Lossfunction.mse(self.output, self.y)
+					batch_loss += Lossfunction.se(self.output, self.y)
 					d_error = np.add(d_error, (self.output - self.y), casting = 'unsafe')
 
+
 				## Calculate the MSE
-				batch_loss = batch_loss/batch_size
-				d_error = (d_error/batch_size)
+				batch_loss = batch_loss/(batch_end-batch_start)
+				d_error = (d_error/((batch_end-batch_start)))
 
 				## Update the weights
 				self.backward_propagation(d_error)
-				loss += batch_loss/no_of_batches
+				loss += batch_loss
 
 				## Update the bar
 				sys.stdout.write("=")
@@ -251,15 +281,15 @@ class MinMaxFuzzy:
 					batch_start += batch_size
 					batch_end += batch_size
 
-			##Calculate the loss
-			loss = loss/len(x)
 
 			##Calculate the accuracy
-			accuracy = round(MinMaxFuzzy.cal_acc(cal_y, cal_x),2)
-
+			accuracy,c,ic = MinMaxFuzzy.cal_acc(cal_y, cal_x)
+			accuracy = round(accuracy,3)
 			sys.stdout.write("]\t")
-			sys.stdout.write("Accuracy:" + str(accuracy)+ " ")
-			print("Loss :{}".format(loss[0][0]))
+			sys.stdout.write("Train Accuracy: " + str(accuracy)+ " ") #Printing the Training Accuracy
+			sys.stdout.write("Postives: " + str(c) + " ")             #Printing the No. of Correct classification
+			sys.stdout.write("Negatives: " + str(ic) + " ")           #Printing the No. of Incorrect Classification
+			print("Loss :{}".format(loss[0][0]))                      #Printing the Loss value
 
 class Activation:
 
