@@ -12,10 +12,11 @@ LW1 = normalize(0.1 * randn(8,16));
 B1 = normalize(0.1 * randn(8,1));
 OW = normalize(0.1 * randn(1,8));
 B2 = normalize(0.1 * randn(1,1));
-
-net.IW{1} = IW;
-net.LW{2,1} = LW1;
-net.Lw{2,2} = OW;
+for i
+net.layerWeights{1} = LW1;
+net.layerWeights{2} = OW;
 net.b{1} = IB;
 net.b{2} = B1;
 net.b{3} = B2;
+
+train(net,inp,t)
