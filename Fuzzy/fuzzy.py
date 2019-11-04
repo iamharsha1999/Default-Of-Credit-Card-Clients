@@ -141,41 +141,12 @@ class MinMaxFuzzy:
 			d_weights_t_3 = 2 * (batch_loss) * self.layer2
 			d_weights_t_2 = 2 * (batch_loss) * np.dot(self.weights3.T,self.layer1)
 			d_weights_t_1 = 2 * (batch_loss) * np.dot(np.dot(self.weights3,self.weights2).T,self.input)
-			# d_weights_t_1 = 2 * (batch_loss) * np.dot(np.dot(np.dot(self.weights4,self.weights3),self.weights2).T, self.input)
 
 			## Update the Weights
 			# self.weights4 = self.weights4 - (alpha * d_weights_t_4)
 			self.weights3 = np.subtract(self.weights3,(alpha * d_weights_t_3))
 			self.weights2 = np.subtract(self.weights2,(alpha * d_weights_t_2))
 			self.weights1 = np.subtract(self.weights1,(alpha * d_weights_t_1))
-
-		# elif self.optimizer == 'LM':
-		#
-		# 	"""
-		# 	H being the Hessian Matrix
-		# 	g being the gradient
-		# 	delta_w = (-H) * g
-		#
-		# 	Newtons Update Rule:
-		# 	w_new = w_old - (Inverse(-H)*g)
-		#
-		# 	"""
-		#
-		# 	## Calculate the gradients
-		#
-		# 	#First Order Derivatives
-		# 	d_weights_3 = (batch_loss) * self.layer2
-		# 	d_weights_2 = (batch_loss) * np.dot(self.weights3.T,self.layer1)
-		# 	d_weights_1 = (batch_loss) * np.dot(np.dot(self.weights3,self.weights2).T,self.input)
-		#
-		# 	# Second Order Derivatives
-		# 	d_weights_w_1 = []
-		# 	d_weights_w_2 =
-		# 	d_weights_w_3 = []
-
-
-
-
 
 
 

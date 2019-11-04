@@ -24,7 +24,7 @@ class Lossfunction:
         return loss
 
     @staticmethod
-    def mse(x, y):
+    def se(x, y):
 
     	"""
     	x being the output of the neural network
@@ -36,18 +36,22 @@ class Lossfunction:
     	return error
 
     @staticmethod
-    def absolute_error(self, x, y):
+    def half_squared_error(x,y):
+        """
+    	x being the output of the neural network
+    	y being the actual output for the corresponding input or the label in case of classification
+    	"""
+
+        error = ((y - x)**2)/2
+
+        return error
+
+    @staticmethod
+    def absolute_error(x, y):
 
     	"""
     	x being the output of the neural network
     	y being the actual output for the corresponding input or the label in case of classification
     	"""
-    	error = 0
-
-    	for i in range(len(y)):
-
-    		error += abs(y[i] - x[i])
-
-    	abs_error = error / len(y)
-
+    	error = x-y
     	return abs_error

@@ -25,4 +25,4 @@ x = fuzzfy(x)
 fuzzy_model = MinMaxFuzzy(x,y)
 
 #Fitting the Data to train the model
-fuzzy_model.fit(x, y, 'AND',100, optmizer = 'sgd')
+fuzzy_model.fit(x, y, 'AND',100, optimizer = 'sgd')
