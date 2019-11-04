@@ -2,12 +2,23 @@ import numpy as np
 
 class FuzzyClasssifier:
 
-    def __init__(self, X, Y, no_of_class):
+    def __init__(self, X, Y, no_of_class, exp_bound = 0.5):
 
-        self.dimensions = retrive_dimensions(X)                                      ## Number of dimensions of the hyperbox
-        self.hyperlayer_nodes = 16                                                   ## Number of hyperboxes in the Hidden Layer
-        self.hyperlayer = create_hyperlayer(self.hyperlayer_nodes, self.dimensions)  ## Create the Hidden Layer
-        self.output = create_output_layer(no_of_class)                               ## Create the Output Layer
+        self.expansion_boundary = exp_bound                                              ## User defined Expansion Boundary
+        self.dimensions = retrive_dimensions(X)                                          ## Number of dimensions of the hyperbox
+        self.hyperlayer_nodes = 16                                                       ## Number of hyperboxes in the Hidden Layer
+        self.hyperlayer = create_layer(no_of_class)                                      ## Create the Hidden Layer
+        self.hyperweights = create_hyperweights(self.hyperlayer_nodes, self.dimensions)  ## Random Initialisation of Weights
+        self.output = create_layer(no_of_class)                                          ## Create the Output Layer
+        
+
+
+    @staticmethod
+	def normalise(x):
+		maxi = np.max(x)
+		mini = np.min(x)
+		x = (x - mini)/(maxi-mini)
+		return x
 
 
     @staticmethod
@@ -16,31 +27,35 @@ class FuzzyClasssifier:
 
 
     @staticmethod
-    def create_output_layer(inputp):
+    def create_layer(inputp):
         return np.zeros(inputp)
+
+    @staticmethod
+    def create_output_weights(no_of_nodes,no_of_classes):
+        weights = np.random.randint
 
 
     @staticmethod
-    def create_hyperlayer(no_of_nodes, no_of_dims):
+    def create_hyperweights(no_of_nodes, no_of_dims):
 
         """
         no_of_nodes => No of Hyperboxes in the Layer
         no_of_dims  => No of Dimensions of the Hyperbox
         """
 
-        hyperlayer = {}
+        hyperweights = {}
         for i in range(no_of_nodes):
 
-            points = np.random.randint(0, 15, size = 2 * no_of_dims)
+            points = np.random.randn(size = 2 * no_of_dims)
             points.sort()
             _min = points[:no_of_dims]
             _max = points[no_of_dims:]
-            hyperlayer["node" + str(i+1)] = [_min,_max]
+            hyperweights["node" + str(i+1)] = [_min,_max]
 
-        return hyperlayer
+        return hyperweights
 
 
-
+    @staticmethod
     def  membership(Ah, gamma, hypernodes):
         n = len(Ah)
         no_of_nodes = hypernodes.shape[0]
@@ -56,3 +71,13 @@ class FuzzyClasssifier:
             hyperlayer.append(sum)
 
         return hyperlayer
+
+    @staticmethod
+    def hyperbox_expansion(exp_bound,hyperbox,inpt,dims):
+        sum = 0
+        for i in range(dims):
+            sum += (max(hyperbox[1][i],inpt[i]) - min(hyperbox[0][i]))
+        if exp_bound > sum:
+            for i in range(dims):
+                hyperbox[0][i] = min(hyperbox[0][i],inpt[i])
+                hyperbox[1][i] = max(hyperbox[1][i],inpt[i])
