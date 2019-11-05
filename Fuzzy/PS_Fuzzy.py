@@ -10,7 +10,8 @@ class FuzzyClasssifier:
         self.hyperlayer = create_layer(no_of_class)                                      ## Create the Hidden Layer
         self.hyperweights = create_hyperweights(self.hyperlayer_nodes, self.dimensions)  ## Random Initialisation of Weights
         self.output = create_layer(no_of_class)                                          ## Create the Output Layer
-        
+
+        self.overlap_param = 1
 
 
     @staticmethod
@@ -79,5 +80,37 @@ class FuzzyClasssifier:
             sum += (max(hyperbox[1][i],inpt[i]) - min(hyperbox[0][i]))
         if exp_bound > sum:
             for i in range(dims):
-                hyperbox[0][i] = min(hyperbox[0][i],inpt[i])
-                hyperbox[1][i] = max(hyperbox[1][i],inpt[i])
+                hyperbox_old[0][i] = min(hyperbox[0][i],inpt[i])
+                hyperbox_old[1][i] = max(hyperbox[1][i],inpt[i])
+
+    @staticmethod
+    def overlap_test(overlap_param, expanded_hyperbox, overlap_hyperbox):
+        """
+            overlap_param       => Carries the Overlap Parameter Value
+            expanded_hyperbox   => The Hyperbox that was expanded previously
+            overlap_hyperbox    => The Hyperbox that belongs to another class
+        """
+        overlap_new = 0
+        i = 0
+        while(i<dims && overlap_index != -1):
+
+            if expanded_hyperbox[0][i] < overlap_hyperbox[0][i] < expanded_hyperbox[1][i] < overlap_hyperbox[1][i]:
+                overlap_new = min(expanded_hyperbox[1][i] - overlap_hyperbox[0][i], overlap_param)
+            elif overlap_hyperbox[0][i] < expanded_hyperbox[0][i] < overlap_hyperbox[1][i] < expanded_hyperbox[1][i]:
+                overlap_new = min(overlap_hyperbox[1][i] - expanded_hyperbox[0][i], overlap_param)
+            elif expanded_hyperbox[0][i] < overlap_hyperbox[0][i] < overlap_hyperbox[1][i] < expanded_hyperbox[1][i]:
+                overlap_new = min(min(overlap_hyperbox[1][i] - expanded_hyperbox[0][i],expanded_hyperbox[1][i] - overlap_hyperbox[0][i]), overlap_param)
+            elif overlap_hyperbox[0][i] < expanded_hyperbox[0][i] < expanded_hyperbox[1][i] < overlap_hyperbox[1][i]:
+                overlap_new = min(min(expanded_hyperbox[1][i] - overlap_hyperbox[0][i],overlap_hyperbox[1][i] - expanded_hyperbox[0][i]), overlap_param)
+
+            if (overlap_param - overlap_new) > 0:
+                overlap_index = i
+                overlap_param = overlap_new
+            else:
+                overlap_index = -1
+
+            i+=1
+            return overlap_index
+
+    @staticmethod
+    def contraction_test(overlap_index, ):

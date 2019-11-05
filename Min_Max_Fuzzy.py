@@ -14,11 +14,15 @@ def fuzzfy(df):
     return df
 
 ## Reading the Data
-df_path = 'Dataset/defaultofcreditcardclients.csv'
-df = pd.read_csv(df_path, header=1)
+df_path = '/home/harsha/Machine_Learning_Project/AI_J_Component/cardio_train.csvv'
+df = pd.read_csv(df_path)
+print(df)
 y = df.iloc[:,-1]
 x = df.iloc[:,:-1]
+
 x = fuzzfy(x)
+# print("Main",x.shape)
+# print(y.shape)
 
 
 #Initaing the Model

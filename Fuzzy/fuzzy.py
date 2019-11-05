@@ -18,6 +18,7 @@ class MinMaxFuzzy:
 
 		y = np.array(y)
 		x = np.array(x)
+		print("X",x.shape)
 		x_d = np.reshape(x[0], (1, x.shape[1]))
 		y_d = np.reshape(y[0], (1, 1))
 
@@ -27,7 +28,8 @@ class MinMaxFuzzy:
 		print("Layer 2: {}".format(8))
 		# print("Layer 3: {}".format(8))
 		print("Output Layer: {}".format(1))
-		self.weights1 = np.random.randint(0, 50 , size = (16,self.input.shape[1]))  ##Weights for connections from Input to 1st hidden layer
+		self.weights1 = np.random.randint(0, 50 , size = (16,self.input.shape[1]))
+	  ##Weights for connections from Input to 1st hidden layer
 		self.weights1 = np.around(MinMaxFuzzy.normalise(self.weights1), decimals = 1)
 		# self.weights2 = np.random.randint(0, 10 , size = (8,16))  ##Weights for connections from 1st Hidden Layer to 2nd Hidden Layer
 		# self.weights2 = np.around(MinMaxFuzzy.normalise(self.weights2), decimals = 2)
@@ -182,7 +184,7 @@ class MinMaxFuzzy:
 		else:
 			no_of_batches  = len(x)/batch_size
 
-		toolbar_width = int(len(x)/verbose)
+		toolbar_width = no_of_batches
 
 		print("Number of Epochs: {}".format(epochs))
 		print("Activation : {}".format(activation))
@@ -219,10 +221,10 @@ class MinMaxFuzzy:
 
 					if self.output > 0.5:
 						cal_y.append(1)
-						self.output = 1
+
 					else:
 						cal_y.append(0)
-						self.output = 0
+
 
 					cal_x.append(self.y)
 
